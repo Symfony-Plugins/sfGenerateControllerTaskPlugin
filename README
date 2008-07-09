@@ -1,0 +1,45 @@
+= sfGenerateControllerTaskPlugin =
+
+Easily generate controllers for your symfony apps.
+
+== Installation ==
+
+{{{
+$ ./symfony plugin-install http://plugins.symfony-project.com/sfGenerateControllerTaskPlugin
+}}}
+
+== Usage ==
+
+The `generate:controller` task creates a front controller in your project's `web/` directory:
+
+{{{
+$ ./symfony generate:controller frontend dev
+}}}
+
+Traffic to this controller can be restricted by IP address by using the `--allowed-ip` option:
+
+{{{
+$ ./symfony generate:controller frontend dev --allowed-ip="127.0.0.1"
+}}}
+
+This common use case can also be accomplished using the `localhost` shortcut (which also adds the IPv6 equivalent):
+
+{{{
+$ ./symfony generate:controller frontend dev --allowed-ip="localhost"
+}}}
+
+If you want to use a filename other than the symfony default filename, use the `--filename` option:
+
+{{{
+$ ./symfony generate:controller frontend dev --filename="index"
+}}}
+
+== Changelog ==
+
+=== 1.0.0 ===
+
+ * Initial public release
+
+== Maintainers ==
+
+ * Kris Wallsmith
