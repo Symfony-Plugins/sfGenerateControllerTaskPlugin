@@ -24,6 +24,8 @@ class sfGenerateControllerTask extends sfBaseTask
       new sfCommandOption('filename', null, sfCommandOption::PARAMETER_REQUIRED, 'Filename for the controller'),
       new sfCommandOption('debug', null, sfCommandOption::PARAMETER_NONE, 'Controller debug mode'),
       new sfCommandOption('allowed-ip', null, sfCommandOption::PARAMETER_REQUIRED | sfCommandOption::IS_ARRAY, 'Restrict traffic by IP address'),
+      new sfCommandOption('check-server', null, sfCommandOption::PARAMETER_NONE, 'Check for configuration variables in the $_SERVER array'),
+      new sfCommandOption('force', null, sfCommandOption::PARAMETER_NONE, 'Overwrite any existing file of the same name'),
     ));
 
     $this->aliases = array('init-controller');
@@ -36,21 +38,36 @@ class sfGenerateControllerTask extends sfBaseTask
 The [generate:controller|INFO] task creates a front controller in the [web/|COMMENT] 
 directory:
 
-  [./symfony generate:controller frontend dev|INFO]
+  [./symfony generate:controller frontend dev --debug|INFO]
 
 Traffic to this controller can be restricted by IP address by using the 
 [allowed-ip|COMMENT] option:
 
-  [./symfony generate:controller frontend dev --allowed-ip="127.0.0.1"|INFO]
+  [./symfony generate:controller frontend dev --allowed-ip="127.0.0.1" --debug|INFO]
 
 This common use case can also be accomplished using the [localhost|COMMENT] shortcut:
 
-  [./symfony generate:controller frontend dev --allowed-ip="localhost"|INFO]
+  [./symfony generate:controller frontend dev --allowed-ip="localhost" --debug|INFO]
 
 If you want to use a filename other than the symfony default filename, use 
 the [filename|COMMENT] option:
 
-  [./symfony generate:controller frontend dev --filename="index"|INFO]
+  [./symfony generate:controller frontend prod --filename="index"|INFO]
+
+The controller can be configured to listen to the server for configuration
+variables using the [check-server|COMMENT] option:
+
+  [./symfony generate:controller frontend prod --check-server|INFO]
+
+This option will add logic to your controller to first look for 
+[SF_APPLICATION|COMMENT], [SF_ENVIRONMENT|COMMENT] and [SF_DEBUG|COMMENT] keys in the [\$ SERVER|COMMENT] array. If
+these keys are not found, the command arguments are used as fallback values.
+
+Using the [check-server|COMMENT] option you can create an [index.php|COMMENT] controller that can
+dispatch any application, depending on what [SetEnv|COMMENT] directives exist in the 
+requested [VirtualHost|COMMENT] configuration. This feature is Apache-specific.
+
+  [./symfony generate:controller frontend prod --filename="index" --check-server --force|INFO]
 
 EOF;
   }
@@ -105,13 +122,37 @@ if (!in_array(@\$_SERVER['REMOTE_ADDR'], $ipArray))
 EOF;
     }
 
+    if (file_exists(sfConfig::get('sf_web_dir').'/'.$filename))
+    {
+      if (isset($options['force']) && $options['force'])
+      {
+        $this->getFilesystem()->remove(sfConfig::get('sf_web_dir').'/'.$filename);
+      }
+      else
+      {
+        throw new InvalidArgumentException(sprintf('A "%s" controller already exists. Use the --force option to overwrite.', $filename));
+      }
+    }
+
     $this->getFilesystem()->copy(dirname(__FILE__).'/skeleton/index.php', sfConfig::get('sf_web_dir').'/'.$filename);
-    $this->getFilesystem()->replaceTokens(sfConfig::get('sf_web_dir').'/'.$filename, '##', '##', array(
-      'APP_NAME'    => $app,
-      'ENVIRONMENT' => $env,
-      'IS_DEBUG'    => isset($options['debug']) && $options['debug'] ? 'true' : 'false',
-      'IP_CHECK'    => $ipCheck,
-    ));
+    if (isset($options['check-server']) && $options['check-server'])
+    {
+      $this->getFilesystem()->replaceTokens(sfConfig::get('sf_web_dir').'/'.$filename, '##', '##', array(
+        'APP_NAME'    => "\n  ".'isset($_SERVER[\'SF_APPLICATION\']) ? $_SERVER[\'SF_APPLICATION\'] : '.var_export($app, true),
+        'ENVIRONMENT' => "\n  ".'isset($_SERVER[\'SF_ENVIRONMENT\']) ? $_SERVER[\'SF_ENVIRONMENT\'] : '.var_export($env, true),
+        'IS_DEBUG'    => "\n  ".'isset($_SERVER[\'SF_DEBUG\']) ? (boolean) $_SERVER[\'SF_DEBUG\'] : '.(isset($options['debug']) && $options['debug'] ? 'true' : 'false'),
+        'IP_CHECK'    => $ipCheck,
+      ));
+    }
+    else
+    {
+      $this->getFilesystem()->replaceTokens(sfConfig::get('sf_web_dir').'/'.$filename, '##', '##', array(
+        'APP_NAME'    => var_export($app, true),
+        'ENVIRONMENT' => var_export($env, true),
+        'IS_DEBUG'    => isset($options['debug']) && $options['debug'] ? 'true' : 'false',
+        'IP_CHECK'    => $ipCheck,
+      ));
+    }
   }
 
   /**

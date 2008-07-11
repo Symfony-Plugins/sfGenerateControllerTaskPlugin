@@ -34,7 +34,26 @@ If you want to use a filename other than the symfony default filename, use the `
 $ ./symfony generate:controller frontend dev --filename="index"
 }}}
 
+The controller can be configured to listen to the server for configuration variables using the `check-server` option:
+
+{{{
+$ ./symfony generate:controller frontend prod --check-server
+}}}
+
+This option will add logic to your controller to first look for `SF_APPLICATION`, `SF_ENVIRONMENT` and `SF_DEBUG` keys in the `$_SERVER` array. If these keys are not found, the command arguments are used as fallback values.
+
+Using the `check-server` option you can create an `index.php` controller that can dispatch any application, depending on what `SetEnv` directives exist in the requested `VirtualHost` configuration. This feature is Apache-specific.
+
+{{{
+$ ./symfony generate:controller frontend prod --filename="index" --check-server --force
+}}}
+
 == Changelog ==
+
+=== 1.1.0-DEV ===
+
+ * Added option to check server for configuration values
+ * Added exception if file already exists and `force` option to overwrite
 
 === 1.0.0 ===
 
