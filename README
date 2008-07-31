@@ -1,64 +1,41 @@
-= sfGenerateControllerTaskPlugin =
-
-Easily generate controllers for your symfony apps.
-
-== Installation ==
-
-{{{
-$ ./symfony plugin-install http://plugins.symfony-project.com/sfGenerateControllerTaskPlugin
-}}}
-
-== Usage ==
+Usage
+-----
 
 The `generate:controller` task creates a front controller in your project's `web/` directory:
 
-{{{
-$ ./symfony generate:controller frontend dev
-}}}
+    ./symfony generate:controller frontend dev
 
 Traffic to this controller can be restricted by IP address by using the `--allowed-ip` option:
 
-{{{
-$ ./symfony generate:controller frontend dev --allowed-ip="127.0.0.1"
-}}}
+    ./symfony generate:controller frontend dev --allowed-ip="127.0.0.1"
 
 This common use case can also be accomplished using the `localhost` shortcut (which also adds the IPv6 equivalent):
 
-{{{
-$ ./symfony generate:controller frontend dev --allowed-ip="localhost"
-}}}
+    ./symfony generate:controller frontend dev --allowed-ip="localhost"
 
 If you want to use a filename other than the symfony default filename, use the `--filename` option:
 
-{{{
-$ ./symfony generate:controller frontend dev --filename="index"
-}}}
+    ./symfony generate:controller frontend dev --filename="index"
 
 The controller can be configured to listen to the server for configuration variables using the `check-server` option:
 
-{{{
-$ ./symfony generate:controller frontend prod --check-server
-}}}
+    ./symfony generate:controller frontend prod --check-server
 
 This option will add logic to your controller to first look for `SF_APPLICATION`, `SF_ENVIRONMENT` and `SF_DEBUG` keys in the `$_SERVER` array. If these keys are not found, the command arguments are used as fallback values.
 
 Using the `check-server` option you can create an `index.php` controller that can dispatch any application, depending on what `SetEnv` directives exist in the requested `VirtualHost` configuration. This feature is Apache-specific.
 
-{{{
-$ ./symfony generate:controller frontend prod --filename="index" --check-server --force
-}}}
+    ./symfony generate:controller frontend prod --filename="index" --check-server --force
 
-== Changelog ==
+Changelog
+---------
 
-=== 1.1.0-DEV ===
+### 1.1.0
 
  * Added option to check server for configuration values
- * Added exception if file already exists and `force` option to overwrite
+ * Added exception if file already exists and `--force` option to overwrite
+ * Migrated `README` to Markdown for new plugins system
 
-=== 1.0.0 ===
+### 1.0.0
 
  * Initial public release
-
-== Maintainers ==
-
- * Kris Wallsmith
